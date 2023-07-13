@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for amm.
 GH_REPO="https://github.com/com-lihaoyi/Ammonite/"
 TOOL_NAME="amm"
 TOOL_TEST="amm --version"
