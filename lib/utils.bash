@@ -62,9 +62,9 @@ list_assets() {
 
 list_all_versions() {
   # While loop from https://superuser.com/a/284226
-  list_github_tags | while read tag || [[ -n $tag ]]; do
+  while IFS= read tag || [[ -n $tag ]]; do
     list_assets "$tag"
-  done
+  done <<< $(list_github_tags)
 }
 
 # The Ammonite version is <scala-version>-<ammonite tag>
