@@ -27,20 +27,20 @@ sort_versions() {
 # Make a query to the GitHub API
 gh_query() {
   local url_rest="$1"
+  echo "$url_rest"
   curl "${curl_opts[@]}" \
       -H "Accept: application/vnd.github+json" \
       -H "X-GitHub-Api-Version: 2022-11-28" \
-      "https://api.github.com/repos/$OWNER/$REPO/$url_rest" ||
-    fail "Could not curl $url_rest"
+      "https://api.github.com/repos/$OWNER/$REPO/$url_rest" || fail "Could not curl $url_rest"
 }
 
 # Argument is the key whose value to get, JSON is gotten from stdin
 get_str_value_from_json() {
-  grep -o "\"$1\": \".*?\"" | cut -d '"' -f 4
+  grep -oE "\"$1\": \"[^\"]*\"" | cut -d '"' -f 4
 }
 
 get_num_value_from_json() {
-  grep -o "\"$1\": \d+" | cut -d ':' -f 2 | sed -E "s/(^ +)|\"//g" # Trim
+  grep -oE "\"$1\": [0-9][0-9]+" | cut -d ':' -f 2 | sed -E "s/(^ +)|\"//g" # Trim
 }
 
 # Get the tag names from a list of releases (or a single release) provided by
@@ -62,9 +62,10 @@ list_assets() {
 
 list_all_versions() {
   # While loop from https://superuser.com/a/284226
-  while IFS= read tag || [[ -n $tag ]]; do
+  local tags=$(list_github_tags)
+  while IFS= read -r tag || [[ -n $tag ]]; do
     list_assets "$tag"
-  done <<< $(list_github_tags)
+  done < <(list_github_tags)
 }
 
 # The Ammonite version is <scala-version>-<ammonite tag>
