@@ -55,7 +55,7 @@ list_github_tags() {
 
 get_release_id() {
   local tag="$1"
-  $(gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1)
+  gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1
 }
 
 # Given a tag, list its scala-ammonite versions
@@ -67,7 +67,6 @@ list_assets() {
 
 list_all_versions() {
   # While loop from https://superuser.com/a/284226
-  local tags=$(list_github_tags)
   while IFS= read -r tag || [[ -n $tag ]]; do
     list_assets "$tag"
   done < <(list_github_tags)
@@ -79,11 +78,12 @@ tag_from_version() {
 }
 
 download_release() {
-  local version="$1"
-  local filename="$2"
+  local version filename tag url
+  version="$1"
+  filename="$2"
 
-  local tag=$(tag_from_version "$version")
-  local url="$GH_REPO/releases/download/$tag/$version"
+  tag=$(tag_from_version "$version")
+  url="$GH_REPO/releases/download/$tag/$version"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" \
