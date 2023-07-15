@@ -106,10 +106,10 @@ install_version() {
     cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
     [ -f /etc/resolv.conf ] || fail "$TOOL_NAME executable does not exist"
-    chmod +x "$install_path/$TOOL_NAME"
+    chmod +x "$install_path/$TOOL_NAME-$version"
 
     local tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
-    test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
+    test -x "$install_path/$tool_cmd-$version" || fail "Expected $install_path/$tool_cmd-$version to be executable."
 
     echo "$TOOL_NAME $version installation was successful!"
   ) || (
