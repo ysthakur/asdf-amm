@@ -2,7 +2,7 @@
 
 # asdf-amm [![Build](https://github.com/ysthakur/asdf-amm/actions/workflows/build.yml/badge.svg)](https://github.com/ysthakur/asdf-amm/actions/workflows/build.yml) [![Lint](https://github.com/ysthakur/asdf-amm/actions/workflows/lint.yml/badge.svg)](https://github.com/ysthakur/asdf-amm/actions/workflows/lint.yml)
 
-[amm](https://ammonite.io/) plugin for the [asdf version manager](https://asdf-vm.com).
+[Ammonite](https://ammonite.io/) plugin for the [asdf version manager](https://asdf-vm.com).
 
 </div>
 
@@ -18,7 +18,6 @@
 **TODO: adapt this section**
 
 - `bash`, `curl`, `tar`: generic POSIX utilities.
-- `SOME_ENV_VAR`: set this environment variable in your shell config to load the correct version of tool x.
 
 # Install
 
@@ -30,7 +29,7 @@ asdf plugin add amm
 asdf plugin add amm https://github.com/ysthakur/asdf-amm.git
 ```
 
-amm:
+Ammonite:
 
 ```shell
 # Show all installable versions
@@ -53,7 +52,7 @@ install & manage versions.
 
 Contributions of any kind welcome! See the [contributing guide](contributing.md).
 
-[Thanks goes to these contributors](https://github.com/ysthakur/asdf-amm/graphs/contributors)!
+<!-- [Thanks goes to these contributors](https://github.com/ysthakur/asdf-amm/graphs/contributors)! -->
 
 # License
 
