@@ -16,7 +16,7 @@ fail() {
 curl_opts=(-fsSL)
 
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
-  curl_opts=("${curl_opts[@]}" -H "Authorization: token $GITHUB_API_TOKEN")
+  curl_opts=("${curl_opts[@]}" -H "Authorization: Bearer $GITHUB_API_TOKEN")
 fi
 
 sort_versions() {
@@ -26,11 +26,12 @@ sort_versions() {
 
 # Make a query to the GitHub API
 gh_query() {
-  local url="$1"
+  local url_rest="$1"
   curl "${curl_opts[@]}" \
-    -H "Accept: application/vnd.github+json" \
-    -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/repos/$OWNER/$REPO/$url"
+      -H "Accept: application/vnd.github+json" \
+      -H "X-GitHub-Api-Version: 2022-11-28" \
+      "https://api.github.com/repos/$OWNER/$REPO/$url_rest" ||
+    fail "Could not curl $url_rest"
 }
 
 # Argument is the key whose value to get, JSON is gotten from stdin
@@ -56,14 +57,14 @@ list_github_tags() {
 list_assets() {
   local tag="$1"
   local id=$(gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1)
-  gh_query "releases/$id/assets" | get_str_value_from_json "name" | cut -d '-' -f 1,2
+  gh_query "releases/$id/assets" | get_str_value_from_json "name" | cut -d '-' -f 1,2 | uniq
 }
 
 list_all_versions() {
   # While loop from https://superuser.com/a/284226
-  while IFS= read tag || [[ -n $tag ]]; do
+  list_github_tags | while read tag || [[ -n $tag ]]; do
     list_assets "$tag"
-  done < <(list_github_tags)
+  done
 }
 
 # The Ammonite version is <scala-version>-<ammonite tag>
@@ -76,8 +77,7 @@ download_release() {
   version="$1"
   filename="$2"
 
-  # TODO: Adapt the release URL convention for amm
-  url="$GH_REPO/archive/${tag_from_version version}.tar.gz"
+  url="$GH_REPO/releases/download/${tag_from_version version}/$version"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -96,7 +96,9 @@ install_version() {
     mkdir -p "$install_path"
     cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-    # TODO: Assert amm executable exists.
+    [ -f /etc/resolv.conf ] || fail "$TOOL_NAME executable does not exist"
+    chmod +x "$install_path/$TOOL_NAME"
+
     local tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
     test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
 
