@@ -53,10 +53,15 @@ list_github_tags() {
   gh_query "releases" | tag_names
 }
 
+get_release_id() {
+  local tag="$1"
+  $(gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1)
+}
+
 # Given a tag, list its scala-ammonite versions
 list_assets() {
   local tag="$1"
-  local id=$(gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1)
+  local id=$(get_release_id "$tag")
   gh_query "releases/$id/assets" | get_str_value_from_json "name" | cut -d '-' -f 1,2 | uniq
 }
 
@@ -81,7 +86,10 @@ download_release() {
   local url="$GH_REPO/releases/download/$tag/$version"
 
   echo "* Downloading $TOOL_NAME release $version..."
-  curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
+  curl "${curl_opts[@]}" \
+      -H "Accept: application/octet-stream" \
+      -o "$filename" -C - "$url" ||
+    fail "Could not curl $url_rest"
 }
 
 install_version() {
