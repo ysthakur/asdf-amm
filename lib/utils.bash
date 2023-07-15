@@ -24,21 +24,51 @@ sort_versions() {
     LC_ALL=C sort -t. -k 1,1 -k 2,2n -k 3,3n -k 4,4n -k 5,5n | awk '{print $2}'
 }
 
-list_github_tags() {
-  git ls-remote --tags --refs "$GH_REPO" |
-    grep -o 'refs/tags/.*' | cut -d/ -f3- |
-    sed 's/^v//' | # Remove the v at the start of each tag
-    sed '/snapshot-commit-uploads/d' # Remove the snapshot-commit-uploads tag
-}
-
-list_all_versions() {
-  # TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-  # Change this function if amm has other means of determining installable versions.
-  list_github_tags
+# Make a query to the GitHub API
+gh_query() {
+  local url="$1"
   curl "${curl_opts[@]}" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/repos/$OWNER/$REPO/releases/RELEASE_ID/assets"
+    "https://api.github.com/repos/$OWNER/$REPO/$url"
+}
+
+# Argument is the key whose value to get, JSON is gotten from stdin
+get_str_value_from_json() {
+  grep -Po "(?<=\"$1\":)\s*\".*?\"" | cut -d '"' -f 2
+}
+
+get_num_value_from_json() {
+  grep -Po "(?<=\"$1\":)\s\d+" | sed "s/^ \+//g" # Trim whitespace
+}
+
+# Get the tag names from a list of releases (or a single release) provided by
+# the GitHub API. Reads from stdin.
+tag_names() {
+  get_str_value_from_json "tag_name"
+}
+
+list_github_tags() {
+  gh_query "releases" | tag_names
+}
+
+# Given a tag, list its scala-ammonite versions
+list_assets() {
+  local tag="$1"
+  local id=$(gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1)
+  gh_query "releases/$id/assets" | get_str_value_from_json "name" | cut -d '-' -f 1,2
+}
+
+list_all_versions() {
+  # While loop from https://superuser.com/a/284226
+  while IFS= read tag || [[ -n $tag ]]; do
+    list_assets "$tag"
+  done < <(list_github_tags)
+}
+
+# The Ammonite version is <scala-version>-<ammonite tag>
+tag_from_version() {
+  cut -d "-" -f 2 <<< "$1"
 }
 
 download_release() {
@@ -47,7 +77,7 @@ download_release() {
   filename="$2"
 
   # TODO: Adapt the release URL convention for amm
-  url="$GH_REPO/archive/v${version}.tar.gz"
+  url="$GH_REPO/archive/${tag_from_version version}.tar.gz"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -67,8 +97,7 @@ install_version() {
     cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
     # TODO: Assert amm executable exists.
-    local tool_cmd
-    tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
+    local tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
     test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
 
     echo "$TOOL_NAME $version installation was successful!"
