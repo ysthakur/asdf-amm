@@ -36,11 +36,11 @@ gh_query() {
 
 # Argument is the key whose value to get, JSON is gotten from stdin
 get_str_value_from_json() {
-  grep -Po "(?<=\"$1\":)\s*\".*?\"" | cut -d '"' -f 2
+  grep -o "\"$1\": \".*?\"" | cut -d '"' -f 4
 }
 
 get_num_value_from_json() {
-  grep -Po "(?<=\"$1\":)\s\d+" | sed "s/^ \+//g" # Trim whitespace
+  grep -o "\"$1\": \d+" | cut -d ':' -f 2 | sed -E "s/(^ +)|\"//g" # Trim
 }
 
 # Get the tag names from a list of releases (or a single release) provided by
@@ -73,11 +73,11 @@ tag_from_version() {
 }
 
 download_release() {
-  local version filename url
-  version="$1"
-  filename="$2"
+  local version="$1"
+  local filename="$2"
 
-  url="$GH_REPO/releases/download/${tag_from_version version}/$version"
+  local tag=$(tag_from_version "$version")
+  local url="$GH_REPO/releases/download/$tag/$version"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
