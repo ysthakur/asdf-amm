@@ -15,9 +15,7 @@
 
 # Dependencies
 
-**TODO: adapt this section**
-
-- `bash`, `curl`, `tar`: generic POSIX utilities.
+- `bash`, `curl`, `grep`, `awk`, `sed`: generic POSIX utilities.
 
 # Install
 
