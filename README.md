@@ -39,7 +39,7 @@ asdf install amm latest
 # Set a version globally (on your ~/.tool-versions file)
 asdf global amm latest
 
-# Now amm commands are available
+# Now Ammonite commands are available
 amm --version
 ```
 
@@ -48,7 +48,7 @@ install & manage versions.
 
 # Contributing
 
-Contributions of any kind welcome! See the [contributing guide](contributing.md).
+Contributions of any kind welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 <!-- [Thanks goes to these contributors](https://github.com/ysthakur/asdf-amm/graphs/contributors)! -->
 
