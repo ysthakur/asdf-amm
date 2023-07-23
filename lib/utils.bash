@@ -94,7 +94,7 @@ download_release() {
 	curl "${curl_opts[@]}" \
 		-H "Accept: application/octet-stream" \
 		-o "$filename" -C - "$url" ||
-		fail "Could not curl $url_rest"
+		fail "Could not curl $url"
 }
 
 install_version() {
