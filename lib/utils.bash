@@ -65,7 +65,7 @@ flip_version() {
 get_versions() {
 	get_str_value_from_json "name" |
 		grep -oE '[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+' | # Must meet our desired version format
-		flip_version | # Flip it so Ammonite tag comes before Scala version
+		flip_version |                                     # Flip it so Ammonite tag comes before Scala version
 		uniq
 }
 
@@ -92,7 +92,7 @@ download_release() {
 	filename="$2"
 
 	tag=$(tag_from_version "$version")
-	url="$GH_REPO/releases/download/$tag/$(flip_version $version)"
+	url="$GH_REPO/releases/download/$tag/$(flip_version "$version")"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" \
@@ -117,7 +117,8 @@ install_version() {
 		[ -f /etc/resolv.conf ] || fail "$TOOL_NAME executable does not exist"
 		chmod +x "$install_path/$TOOL_NAME"
 
-		local tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
+		local tool_cmd
+		tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
 
 		echo "$TOOL_NAME $version installation was successful!"
