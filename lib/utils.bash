@@ -21,7 +21,9 @@ fi
 
 # todo sort by only Ammonite version, not Scala version
 sort_versions() {
-	LC_ALL=C sort -t'-' -k 1,1 -k 2,2n -k 3,3n -k 4,4n -k 5,5n
+	awk -F '-' '{ print $2 "-" $1 }' | # Flip it so Ammonite tag comes before Scala version
+		LC_ALL=C sort -t'-' -k 1,1 -k 2,2n -k 3,3n -k 4,4n -k 5,5n |
+		awk -F '-' '{ print $2 "-" $1 }' # Flip it back to normal
 }
 
 # Make a query to the GitHub API
@@ -46,7 +48,7 @@ get_num_value_from_json() {
 # Get the tag names from a list of releases (or a single release) provided by
 # the GitHub API. Reads from stdin.
 tag_names() {
-	get_str_value_from_json "tag_name"
+	grep -oE '"tag_name": "[^"]*"' | cut -d '"' -f 4
 }
 
 list_github_tags() {
@@ -58,14 +60,9 @@ get_release_id() {
 	gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1
 }
 
-flip_version() {
-	awk -F '-' '{ print $2 "-" $1 }'
-}
-
 get_versions() {
-	get_str_value_from_json "name" |
-		grep -oE '[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+' | # Must meet our desired version format
-		flip_version |                                     # Flip it so Ammonite tag comes before Scala version
+	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' | # Must not be an M0 version
+	  cut -d '"' -f 4 | # Extract the asset name
 		uniq
 }
 
@@ -81,9 +78,9 @@ list_all_versions() {
 	gh_query "releases" | get_versions
 }
 
-# The Ammonite version is <Ammonite tag>-<Scala version>
+# The Ammonite version is <Scala version>-<Ammonite tag>
 tag_from_version() {
-	cut -d "-" -f 1 <<<"$1"
+	cut -d "-" -f 2 <<<"$1"
 }
 
 download_release() {
@@ -92,7 +89,7 @@ download_release() {
 	filename="$2"
 
 	tag=$(tag_from_version "$version")
-	url="$GH_REPO/releases/download/$tag/$(flip_version "$version")"
+	url="$GH_REPO/releases/download/$tag/$version"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" \
