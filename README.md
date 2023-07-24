@@ -3,6 +3,12 @@
 # asdf-amm [![Build](https://github.com/ysthakur/asdf-amm/actions/workflows/build.yml/badge.svg)](https://github.com/ysthakur/asdf-amm/actions/workflows/build.yml) [![Lint](https://github.com/ysthakur/asdf-amm/actions/workflows/lint.yml/badge.svg)](https://github.com/ysthakur/asdf-amm/actions/workflows/lint.yml)
 
 [Ammonite](https://ammonite.io/) plugin for the [asdf version manager](https://asdf-vm.com).
+The official instructions for installing Ammonite involve downloading the executable
+for your desired version into a folder like `/usr/local/bin`, but this means you can
+only have one version of Ammonite accessible at a time, and both installation and
+updating are a bit annoying. asdf lets you install multiple versions of tools such
+as Ammonite at a time, and you can switch between them automatically, in case you
+need different Ammonite versions in different projects.
 
 </div>
 
