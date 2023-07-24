@@ -35,27 +35,16 @@ gh_query() {
 		"https://api.github.com/repos/$OWNER/$REPO/$url_rest" || fail "Could not curl $url_rest"
 }
 
-# Get the tag names from a list of releases (or a single release) provided by
-# the GitHub API. Reads from stdin.
-tag_names() {
-	grep -oE '"tag_name": "[^"]*"' | cut -d '"' -f 4
-}
-
-get_versions() {
-	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' | # Must not be an M0 version
-		cut -d '"' -f 4 |                                           # Extract the asset name
-		uniq
-}
-
-# Given a tag, list its scala-ammonite versions
-list_assets() {
-	local release_id
-	release_id=$(gh_query "releases/tags/$1" |
-		grep -oE '"id": [0-9]+' |
-		cut -d ':' -f 2 |
-		sed -E "s/(^ +)|\"//g" | # Trim
-		head -n 1)
-	gh_query "releases/$release_id/assets" | get_versions
+list_all_versions() {
+	# The releases response also includes all the assets, so we can just use that
+	# instead of querying the assets for each release separately
+	gh_query "releases" |
+		# Must not be an M0 version
+		grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' |
+		# Extract the asset names
+		cut -d '"' -f 4 |
+		uniq |
+		sort_versions
 }
 
 download_release() {

@@ -8,6 +8,4 @@ plugin_dir=$(dirname "$(dirname "$current_script_path")")
 # shellcheck source=../lib/utils.bash
 source "${plugin_dir}/lib/utils.bash"
 
-# The releases response also includes all the assets, so we can just use that
-# instead of querying the assets for each release separately
-gh_query "releases" | get_versions | sort_versions | xargs echo
+list_all_versions | xargs echo
