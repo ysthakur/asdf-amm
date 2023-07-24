@@ -62,13 +62,14 @@ get_release_id() {
 
 get_versions() {
 	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' | # Must not be an M0 version
-	  cut -d '"' -f 4 | # Extract the asset name
+		cut -d '"' -f 4 | # Extract the asset name
 		uniq
 }
 
 # Given a tag, list its scala-ammonite versions
 list_assets() {
-	local id=$(get_release_id "$1")
+	local id
+	id=$(get_release_id "$1")
 	gh_query "releases/$id/assets" | get_versions
 }
 
