@@ -29,35 +29,16 @@ sort_versions() {
 # Make a query to the GitHub API
 gh_query() {
 	local url_rest="$1"
-	echo "$url_rest"
 	curl "${curl_opts[@]}" \
 		-H "Accept: application/vnd.github+json" \
 		-H "X-GitHub-Api-Version: 2022-11-28" \
 		"https://api.github.com/repos/$OWNER/$REPO/$url_rest" || fail "Could not curl $url_rest"
 }
 
-# Argument is the key whose value to get, JSON is gotten from stdin
-get_str_value_from_json() {
-	grep -oE "\"$1\": \"[^\"]*\"" | cut -d '"' -f 4
-}
-
-get_num_value_from_json() {
-	grep -oE "\"$1\": [0-9][0-9]+" | cut -d ':' -f 2 | sed -E "s/(^ +)|\"//g" # Trim
-}
-
 # Get the tag names from a list of releases (or a single release) provided by
 # the GitHub API. Reads from stdin.
 tag_names() {
 	grep -oE '"tag_name": "[^"]*"' | cut -d '"' -f 4
-}
-
-list_github_tags() {
-	gh_query "releases" | tag_names
-}
-
-get_release_id() {
-	local tag="$1"
-	gh_query "releases/tags/$tag" | get_num_value_from_json "id" | head -n 1
 }
 
 get_versions() {
@@ -68,9 +49,14 @@ get_versions() {
 
 # Given a tag, list its scala-ammonite versions
 list_assets() {
-	local id
-	id=$(get_release_id "$1")
-	gh_query "releases/$id/assets" | get_versions
+	local tag release_id
+	tag="$1"
+	release_id=$(gh_query "releases/tags/$tag" |
+	  grep -oE '"id": [0-9]+' |
+		cut -d ':' -f 2 |
+		sed -E "s/(^ +)|\"//g" | # Trim
+		head -n 1)
+	gh_query "releases/$release_id/assets" | get_versions
 }
 
 list_all_versions() {
@@ -79,17 +65,13 @@ list_all_versions() {
 	gh_query "releases" | get_versions
 }
 
-# The Ammonite version is <Scala version>-<Ammonite tag>
-tag_from_version() {
-	cut -d "-" -f 2 <<<"$1"
-}
-
 download_release() {
 	local version filename tag url
 	version="$1"
 	filename="$2"
 
-	tag=$(tag_from_version "$version")
+	# The Ammonite version is <Scala version>-<Ammonite tag>
+	tag=$(cut -d "-" -f 2 <<<"$version")
 	url="$GH_REPO/releases/download/$tag/$version"
 
 	echo "* Downloading $TOOL_NAME release $version..."

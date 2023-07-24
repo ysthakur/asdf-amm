@@ -1,0 +1,21 @@
+name: Auto-format
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: asdf-vm/actions/install@v2
+      - name: Run auto-formatter
+        run: scripts/format.bash
+      - name: Stage changes
+        run: git add .
+      - name: Commit and push
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Auto-format code"
