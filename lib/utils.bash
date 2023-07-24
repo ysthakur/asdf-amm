@@ -43,7 +43,7 @@ tag_names() {
 
 get_versions() {
 	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' | # Must not be an M0 version
-		cut -d '"' -f 4 | # Extract the asset name
+		cut -d '"' -f 4 |                                           # Extract the asset name
 		uniq
 }
 
@@ -52,7 +52,7 @@ list_assets() {
 	local tag release_id
 	tag="$1"
 	release_id=$(gh_query "releases/tags/$tag" |
-	  grep -oE '"id": [0-9]+' |
+		grep -oE '"id": [0-9]+' |
 		cut -d ':' -f 2 |
 		sed -E "s/(^ +)|\"//g" | # Trim
 		head -n 1)
