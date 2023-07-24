@@ -49,20 +49,13 @@ get_versions() {
 
 # Given a tag, list its scala-ammonite versions
 list_assets() {
-	local tag release_id
-	tag="$1"
-	release_id=$(gh_query "releases/tags/$tag" |
+	local release_id
+	release_id=$(gh_query "releases/tags/$1" |
 		grep -oE '"id": [0-9]+' |
 		cut -d ':' -f 2 |
 		sed -E "s/(^ +)|\"//g" | # Trim
 		head -n 1)
 	gh_query "releases/$release_id/assets" | get_versions
-}
-
-list_all_versions() {
-	# The releases response also includes all the assets, so we can just use that
-	# instead of querying the assets for each release separately
-	gh_query "releases" | get_versions
 }
 
 download_release() {
