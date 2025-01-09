@@ -21,9 +21,10 @@ fi
 
 # todo sort by only Ammonite version, not Scala version
 sort_versions() {
-	awk -F '-' '{ print $2 "-" $1 }' | # Flip it so Ammonite tag comes before Scala version
-		LC_ALL=C sort -t'-' -k 1,1 -k 2,2n -k 3,3n -k 4,4n -k 5,5n |
-		awk -F '-' '{ print $2 "-" $1 }' # Flip it back to normal
+	# Flip it so Ammonite tag comes before Scala version, and use - as the delimiter everywhere
+	awk -F '[-.]' '{ print $3 "-" $4 "-" $5 "-" $1 "-" $2 }' |
+		LC_ALL=C sort -t'-' -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n |
+		awk -F '-' '{ print $4 "." $5 "-" $1 "." $2 "." $3 }' # Flip it back to normal
 }
 
 # Make a query to the GitHub API
