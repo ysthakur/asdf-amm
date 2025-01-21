@@ -65,7 +65,8 @@ list_all_unstable_versions() {
 			grep -oE '"name": "[0-9]+\.[0-9]\.+[0-9]+"' |
 			cut -d '"' -f 4 |
 			sort -t'.' -k 1,1n -k 2,2n -k 3,3n |
-			tail -n 1)
+			tail -n 1
+	)
 	gh_query "releases" |
 		filter_unstable_assets |
 		# Only keep assets for the latest release
@@ -88,10 +89,11 @@ download_release() {
 	else
 		latest=$(
 			echo $releases |
-			filter_unstable_assets |
-			grep $version |
-			sort -t'-' -k 3,3n -k 4,4 |
-			tail -n 1)
+				filter_unstable_assets |
+				grep $version |
+				sort -t'-' -k 3,3n -k 4,4 |
+				tail -n 1
+		)
 		url="$GH_REPO/releases/download/$tag/$latest"
 	fi
 
