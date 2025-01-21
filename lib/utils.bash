@@ -19,12 +19,13 @@ if [ -n "${GITHUB_API_TOKEN:-}" ]; then
 	curl_opts=("${curl_opts[@]}" -H "Authorization: Bearer $GITHUB_API_TOKEN")
 fi
 
-# todo sort by only Ammonite version, not Scala version
 sort_versions() {
-	# Flip it so Ammonite tag comes before Scala version, and use - as the delimiter everywhere
-	awk -F '[-.]' '{ print $3 "-" $4 "-" $5 "-" $1 "-" $2 }' |
-		LC_ALL=C sort -t'-' -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n |
-		awk -F '-' '{ print $4 "." $5 "-" $1 "." $2 "." $3 }' # Flip it back to normal
+	# Use - as the delimiter everywhere for sort
+	awk -F '[-.]' '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5 }' |
+		LC_ALL=C sort -t'-' -k 3,3n -k 4,4n -k 5,5n -k 1,1n -k 2,2n |
+		# Put the delimiters back
+		awk -F '-' '{ print $1 "." $2 "-" $3 "." $4 "." $5 }' |
+		uniq
 }
 
 # Make a query to the GitHub API
@@ -44,18 +45,55 @@ list_all_versions() {
 		grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' |
 		# Extract the asset names
 		cut -d '"' -f 4 |
-		uniq |
+		sort_versions
+}
+
+# Get names of assets from unstable releases
+filter_unstable_assets() {
+	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-[a-z0-9]+"' |
+		# Extract the asset names
+		cut -d '"' -f 4
+}
+
+list_all_unstable_versions() {
+	# The releases response also includes all the assets, so we can just use that
+	# instead of querying the assets for each release separately
+	releases=$(gh_query releases)
+	# e.g. 3.0.0
+	latest_unstable_release=$(
+		echo $releases |
+			grep -oE '"name": "[0-9]+\.[0-9]\.+[0-9]+"' |
+			cut -d '"' -f 4 |
+			sort -t'.' -k 1,1n -k 2,2n -k 3,3n |
+			tail -n 1)
+	gh_query "releases" |
+		filter_unstable_assets |
+		# Only keep assets for the latest release
+		grep $latest_unstable_release |
+		cut -d '"' -f 1,2 |
 		sort_versions
 }
 
 download_release() {
-	local version filename tag url
+	local version filename tag url latest
 	version="$1"
 	filename="$2"
-
 	# The Ammonite version is <Scala version>-<Ammonite tag>
 	tag=$(cut -d "-" -f 2 <<<"$version")
-	url="$GH_REPO/releases/download/$tag/$version"
+
+	releases=$(gh_query "releases")
+
+	if [[ $releases =~ "\"$version\"" ]]; then
+		url="$GH_REPO/releases/download/$tag/$version"
+	else
+		latest=$(
+			echo $releases |
+			filter_unstable_assets |
+			grep $version |
+			sort -t'-' -k 3,3n -k 4,4 |
+			tail -n 1)
+		url="$GH_REPO/releases/download/$tag/$latest"
+	fi
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" \
