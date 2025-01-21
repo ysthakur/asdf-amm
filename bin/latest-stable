@@ -8,6 +8,11 @@ plugin_dir=$(dirname "$(dirname "$current_script_path")")
 # shellcheck source=../lib/utils.bash
 . "${plugin_dir}/lib/utils.bash"
 
-version="$(list_all_versions | tail -n1 | xargs echo)"
+releases=$(gh_query "releases")
+
+version=$(echo $releases | list_all_unstable_versions | tail -n 1)
+if [[ -z "$version" ]]; then
+	version="$(echo $releases | filter_stable_versions | tail -n 1)"
+fi
 
 printf "%s\n" "$version"

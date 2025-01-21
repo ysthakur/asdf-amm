@@ -37,40 +37,38 @@ gh_query() {
 		"https://api.github.com/repos/$OWNER/$REPO/$url_rest" || fail "Could not curl $url_rest"
 }
 
-list_all_versions() {
-	# The releases response also includes all the assets, so we can just use that
-	# instead of querying the assets for each release separately
-	gh_query "releases" |
-		# Must not be an M0 version
-		grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' |
+# Get the names of assets from stable releases
+# Accepts the output of `gh_query releases` as input.
+# The releases response also includes all the assets, so we can just use that
+# instead of querying the assets for each release separately
+filter_stable_versions() {
+	# Must not be an M0 version
+	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"' |
 		# Extract the asset names
 		cut -d '"' -f 4 |
 		sort_versions
 }
 
 # Get names of assets from unstable releases
+# Accepts output of `gh_query "releases"` as input
 filter_unstable_assets() {
 	grep -oE '"name": "[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-[a-z0-9]+"' |
 		# Extract the asset names
 		cut -d '"' -f 4
 }
 
+# Get latest Ammonite tag (e.g., 3.0.0)
+# Accepts output of `gh_query "releases"` as input
+latest_tag() {
+	grep -oE '"name": "[0-9]+\.[0-9]\.+[0-9]+"' |
+		cut -d '"' -f 4 |
+		sort -t'.' -k 1,1n -k 2,2n -k 3,3n |
+		tail -n 1
+}
+
+# Accepts output of `gh_query "releases"` as input
 list_all_unstable_versions() {
-	# The releases response also includes all the assets, so we can just use that
-	# instead of querying the assets for each release separately
-	releases=$(gh_query releases)
-	# e.g. 3.0.0
-	latest_unstable_release=$(
-		echo $releases |
-			grep -oE '"name": "[0-9]+\.[0-9]\.+[0-9]+"' |
-			cut -d '"' -f 4 |
-			sort -t'.' -k 1,1n -k 2,2n -k 3,3n |
-			tail -n 1
-	)
-	gh_query "releases" |
-		filter_unstable_assets |
-		# Only keep assets for the latest release
-		grep $latest_unstable_release |
+	filter_unstable_assets |
 		cut -d '"' -f 1,2 |
 		sort_versions
 }

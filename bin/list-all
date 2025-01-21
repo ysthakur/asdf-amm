@@ -8,4 +8,9 @@ plugin_dir=$(dirname "$(dirname "$current_script_path")")
 # shellcheck source=../lib/utils.bash
 source "${plugin_dir}/lib/utils.bash"
 
-list_all_versions | xargs echo
+releases=$(gh_query "releases")
+
+echo $releases | filter_stable_versions | xargs echo
+
+latest_tag=$(echo $releases | latest_tag)
+echo $releases | list_all_unstable_versions | grep $latest_tag | xargs echo
