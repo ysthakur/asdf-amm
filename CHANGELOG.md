@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/ysthakur/asdf-amm/compare/v0.2.1...v0.2.2) (2025-01-21)
+
+
+### Bug Fixes
+
+* Include assets for 3.0.0 ([38eec10](https://github.com/ysthakur/asdf-amm/commit/38eec108c5cd697ee9900135ef83719630030590))
+
 ## [0.2.1](https://github.com/ysthakur/asdf-amm/compare/v0.2.0...v0.2.1) (2025-01-09)
 
 
