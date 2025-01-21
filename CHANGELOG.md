@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/ysthakur/asdf-amm/compare/v0.2.2...v0.2.3) (2025-01-21)
+
+
+### Bug Fixes
+
+* Actually list 3.0.0 version ([e86754e](https://github.com/ysthakur/asdf-amm/commit/e86754e6938c9d81b6f3afbde0c3fdb0540a1c05))
+
 ## [0.2.2](https://github.com/ysthakur/asdf-amm/compare/v0.2.1...v0.2.2) (2025-01-21)
 
 
